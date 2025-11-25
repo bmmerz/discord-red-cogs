@@ -1,13 +1,13 @@
 import re
 from redbot.core import commands
 
-# Regex for Reddit URLs (all subdomains)
+# Regex for Reddit URLs
 REDDIT_REGEX = re.compile(
     r"https?://(?:www\.|old\.)?reddit\.com/[^\s<>]+",
     re.IGNORECASE
 )
 
-# Regex for Discord message links
+# Discord message link
 MESSAGE_LINK_REGEX = re.compile(
     r"https://discord.com/channels/\d+/(\d+)/(\d+)"
 )
@@ -43,16 +43,15 @@ class FixReddit(commands.Cog):
             await ctx.send("❌ Could not fetch the message.")
             return
 
-        # Find all Reddit URLs in the message
-        urls = REDDIT_REGEX.findall(message.content)
+        # Find all Reddit URLs using finditer
+        urls = [m.group(0) for m in REDDIT_REGEX.finditer(message.content)]
         if not urls:
             await ctx.send("❌ No Reddit URLs found in that message.")
             return
 
         # Flip each URL
         converted_urls = []
-        for url_tuple in urls:
-            url = url_tuple[0] + (url_tuple[1] or '') + (url_tuple[2] or '')
+        for url in urls:
             if "old.reddit.com" in url.lower():
                 new_url = url.lower().replace("old.reddit.com", "reddit.com")
             else:
