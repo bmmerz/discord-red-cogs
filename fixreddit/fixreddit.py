@@ -3,14 +3,13 @@ import discord
 from discord import app_commands
 from redbot.core import commands
 
-
-# Matches reddit.com or old.reddit.com URLs
+# Regex to match reddit.com, www.reddit.com, or old.reddit.com
 REDDIT_REGEX = re.compile(
     r"(https?://)(www\.|old\.)?reddit\.com([^\s]*)",
     re.IGNORECASE
 )
 
-# Matches Discord message links
+# Regex to match Discord message links
 MESSAGE_LINK_REGEX = re.compile(
     r"https://discord.com/channels/\d+/(\d+)/(\d+)"
 )
@@ -24,11 +23,11 @@ class FixReddit(commands.Cog):
 
     @app_commands.command(
         name="fixreddit",
-        description="Convert reddit.com → old.reddit.com or the reverse. Accepts direct URL or message link."
+        description="Convert reddit.com → old.reddit.com or old.reddit.com → reddit.com. Accepts direct URL or message link."
     )
     @app_commands.describe(
-        url="A reddit.com or old.reddit.com URL",
-        message_link="A link to a message containing a reddit link"
+        url="A reddit.com URL to convert (supports www and old subdomains)",
+        message_link="A Discord message link containing a reddit URL"
     )
     async def fixreddit(
         self,
@@ -36,11 +35,12 @@ class FixReddit(commands.Cog):
         url: str = None,
         message_link: str = None
     ):
+        # Defer if fetching messages (might take a moment)
         await interaction.response.defer()
 
-        # ---------------------------------------------------
-        # CASE 1: A message link is provided
-        # ---------------------------------------------------
+        # -------------------------
+        # CASE 1: message link provided
+        # -------------------------
         if message_link:
             match = MESSAGE_LINK_REGEX.match(message_link)
             if not match:
@@ -48,12 +48,8 @@ class FixReddit(commands.Cog):
                 return
 
             channel_id, message_id = match.groups()
-
-            # Ensure link belongs to current channel
             if int(channel_id) != interaction.channel.id:
-                await interaction.followup.send(
-                    "❌ The message link must be from **this channel**."
-                )
+                await interaction.followup.send("❌ The message link must be from this channel.")
                 return
 
             try:
@@ -62,10 +58,10 @@ class FixReddit(commands.Cog):
                 await interaction.followup.send("❌ Message not found.")
                 return
 
-            # Extract first reddit link
+            # Extract first reddit link from message
             extracted = None
             for word in message.content.split():
-                if REDDIT_REGEX.match(word):
+                if REDDIT_REGEX.search(word):
                     extracted = word
                     break
 
@@ -75,13 +71,11 @@ class FixReddit(commands.Cog):
 
             url = extracted  # Use extracted reddit URL
 
-        # ---------------------------------------------------
-        # CASE 2: Direct URL provided
-        # ---------------------------------------------------
+        # -------------------------
+        # CASE 2: direct URL provided
+        # -------------------------
         if not url:
-            await interaction.followup.send(
-                "❌ You must provide either a reddit URL or a message link."
-            )
+            await interaction.followup.send("❌ You must provide either a reddit URL or a message link.")
             return
 
         match = REDDIT_REGEX.search(url)
@@ -91,12 +85,13 @@ class FixReddit(commands.Cog):
 
         protocol = match.group(1)          # https://
         subdomain = match.group(2) or ""   # www. or old. or None
-        rest = match.group(3) or ""        # everything after reddit.com
+        rest = match.group(3) or ""        # path after reddit.com
 
         # Flip old <-> normal
         if subdomain.lower() == "old.":
-            new_url = f"{protocol}www.reddit.com{rest}"
+            new_url = f"{protocol}reddit.com{rest}"
         else:
             new_url = f"{protocol}old.reddit.com{rest}"
 
+        # Send converted URL as followup
         await interaction.followup.send(f"🔗 **Converted:** <{new_url}>")
