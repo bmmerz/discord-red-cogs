@@ -5,7 +5,7 @@ from redbot.core import commands
 
 # Regex to match reddit.com, www.reddit.com, or old.reddit.com
 REDDIT_REGEX = re.compile(
-    r"(https?://)(www\.|old\.)?reddit\.com([^\s]*)",
+    r"(https?://)(www\.|old\.)?reddit\.com(/[^\s]*)?",
     re.IGNORECASE
 )
 
