@@ -1,76 +1,64 @@
 import re
-import discord
-from discord import app_commands
 from redbot.core import commands
 
-# Robust Reddit URL regex
+# Regex for Reddit URLs (all subdomains)
 REDDIT_REGEX = re.compile(
     r"https?://(?:www\.|old\.)?reddit\.com/[^\s<>]+",
     re.IGNORECASE
 )
 
+# Regex for Discord message links
 MESSAGE_LINK_REGEX = re.compile(
     r"https://discord.com/channels/\d+/(\d+)/(\d+)"
 )
 
+
 class FixReddit(commands.Cog):
-    """Flips reddit.com <-> old.reddit.com URLs."""
+    """Flips reddit.com <-> old.reddit.com URLs from Discord messages."""
 
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(
-        name="fixreddit",
-        description="Convert reddit.com <-> old.reddit.com. Accepts direct URL or message link."
-    )
-    @app_commands.describe(
-        url="A reddit.com URL to convert",
-        message_link="A Discord message link containing a reddit URL"
-    )
-    async def fixreddit(self, interaction: discord.Interaction, url: str = None, message_link: str = None):
-        await interaction.response.defer()
-
-        # CASE 1: Message link
-        if message_link:
-            match = MESSAGE_LINK_REGEX.match(message_link)
-            if not match:
-                await interaction.followup.send("❌ Invalid message link.")
-                return
-
-            channel_id, message_id = match.groups()
-            if int(channel_id) != interaction.channel.id:
-                await interaction.followup.send("❌ Message link must be from this channel.")
-                return
-
-            try:
-                message = await interaction.channel.fetch_message(int(message_id))
-            except discord.NotFound:
-                await interaction.followup.send("❌ Message not found.")
-                return
-
-            url_match = REDDIT_REGEX.search(message.content)
-            if not url_match:
-                await interaction.followup.send("❌ No reddit URL found in the message.")
-                return
-
-            url = url_match.group(0)
-
-        # CASE 2: Direct URL
-        if not url:
-            await interaction.followup.send("❌ You must provide a URL or message link.")
+    @commands.command()
+    async def fixreddit(self, ctx, *, message_link: str):
+        """
+        Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
+        Usage:
+        [p]fixreddit <Discord message link>
+        """
+        message_link = message_link.strip()
+        match = MESSAGE_LINK_REGEX.match(message_link)
+        if not match:
+            await ctx.send("❌ Invalid Discord message link.")
             return
 
-        url_match = REDDIT_REGEX.search(url)
-        if not url_match:
-            await interaction.followup.send("❌ That does not look like a valid reddit URL.")
+        channel_id, message_id = match.groups()
+        if int(channel_id) != ctx.channel.id:
+            await ctx.send("❌ Message link must be from this channel.")
             return
 
-        url = url_match.group(0)
+        try:
+            message = await ctx.channel.fetch_message(int(message_id))
+        except Exception:
+            await ctx.send("❌ Could not fetch the message.")
+            return
 
-        # Flip old <-> normal
-        if "old.reddit.com" in url.lower():
-            new_url = url.lower().replace("old.reddit.com", "reddit.com")
-        else:
-            new_url = url.lower().replace("www.reddit.com", "old.reddit.com").replace("reddit.com", "old.reddit.com")
+        # Find all Reddit URLs in the message
+        urls = REDDIT_REGEX.findall(message.content)
+        if not urls:
+            await ctx.send("❌ No Reddit URLs found in that message.")
+            return
 
-        await interaction.followup.send(f"🔗 **Converted:**\n{new_url}")
+        # Flip each URL
+        converted_urls = []
+        for url_tuple in urls:
+            url = url_tuple[0] + (url_tuple[1] or '') + (url_tuple[2] or '')
+            if "old.reddit.com" in url.lower():
+                new_url = url.lower().replace("old.reddit.com", "reddit.com")
+            else:
+                new_url = url.lower().replace("www.reddit.com", "old.reddit.com").replace("reddit.com", "old.reddit.com")
+            converted_urls.append(new_url)
+
+        # Send results
+        response = "🔗 **Converted URLs:**\n" + "\n".join(converted_urls)
+        await ctx.send(response)
