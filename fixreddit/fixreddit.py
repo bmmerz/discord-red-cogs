@@ -23,7 +23,7 @@ class FixReddit(commands.Cog):
 
     @app_commands.command(
         name="fixreddit",
-        description="Convert reddit.com → old.reddit.com or old.reddit.com → reddit.com. Accepts direct URL or message link."
+        description="Convert reddit.com <-> old.reddit.com. Accepts direct URL or message link."
     )
     @app_commands.describe(
         url="A reddit.com URL to convert (supports www and old subdomains)",
