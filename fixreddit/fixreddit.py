@@ -43,19 +43,20 @@ class FixReddit(commands.Cog):
             await ctx.send("❌ Could not fetch the message.")
             return
 
-        # Find all Reddit URLs using finditer
+        # Find all Reddit URLs
         urls = [m.group(0) for m in REDDIT_REGEX.finditer(message.content)]
         if not urls:
             await ctx.send("❌ No Reddit URLs found in that message.")
             return
 
-        # Flip each URL
+        # Flip URLs correctly
         converted_urls = []
         for url in urls:
-            if "old.reddit.com" in url.lower():
-                new_url = url.lower().replace("old.reddit.com", "reddit.com")
+            url_lower = url.lower()
+            if "old.reddit.com" in url_lower:
+                new_url = url_lower.replace("old.reddit.com", "www.reddit.com")
             else:
-                new_url = url.lower().replace("www.reddit.com", "old.reddit.com").replace("reddit.com", "old.reddit.com")
+                new_url = re.sub(r"(www\.)?reddit\.com", "old.reddit.com", url_lower)
             converted_urls.append(new_url)
 
         # Send results
