@@ -6,7 +6,7 @@ from redbot.core import commands
 
 # Matches reddit.com or old.reddit.com URLs
 REDDIT_REGEX = re.compile(
-    r"(https?://)(old\.)?(www\.)?reddit\.com([^\s]*)",
+    r"(https?://)(www\.|old\.)?reddit\.com([^\s]*)",
     re.IGNORECASE
 )
 
@@ -89,12 +89,12 @@ class FixReddit(commands.Cog):
             await interaction.followup.send("❌ That does not look like a reddit.com link.")
             return
 
-        protocol = match.group(1)        # https://
-        is_old = match.group(2) is not None
-        rest = match.group(4)            # everything after reddit.com
+        protocol = match.group(1)          # https://
+        subdomain = match.group(2) or ""   # www. or old. or None
+        rest = match.group(4)              # everything after reddit.com
 
         # Flip old <-> normal
-        if is_old:
+        if subdomain.lower() == "old.":
             new_url = f"{protocol}www.reddit.com{rest}"
         else:
             new_url = f"{protocol}old.reddit.com{rest}"
