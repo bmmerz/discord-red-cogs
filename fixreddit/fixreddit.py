@@ -84,14 +84,14 @@ class FixReddit(commands.Cog):
             )
             return
 
-        match = REDDIT_REGEX.match(url)
+        match = REDDIT_REGEX.search(url)
         if not match:
             await interaction.followup.send("❌ That does not look like a reddit.com link.")
             return
 
         protocol = match.group(1)          # https://
         subdomain = match.group(2) or ""   # www. or old. or None
-        rest = match.group(4)              # everything after reddit.com
+        rest = match.group(3) or ""        # everything after reddit.com
 
         # Flip old <-> normal
         if subdomain.lower() == "old.":
