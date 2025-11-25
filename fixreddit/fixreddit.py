@@ -3,8 +3,15 @@ import discord
 from discord import app_commands
 from redbot.core import commands
 
-REDDIT_REGEX = re.compile(r"(https?://)(www\.|old\.)?reddit\.com(/[^\s]*)?", re.IGNORECASE)
-MESSAGE_LINK_REGEX = re.compile(r"https://discord.com/channels/\d+/(\d+)/(\d+)")
+# Robust Reddit URL regex
+REDDIT_REGEX = re.compile(
+    r"https?://(?:www\.|old\.)?reddit\.com/[^\s<>]+",
+    re.IGNORECASE
+)
+
+MESSAGE_LINK_REGEX = re.compile(
+    r"https://discord.com/channels/\d+/(\d+)/(\d+)"
+)
 
 class FixReddit(commands.Cog):
     """Flips reddit.com <-> old.reddit.com URLs."""
@@ -14,17 +21,16 @@ class FixReddit(commands.Cog):
 
     @app_commands.command(
         name="fixreddit",
-        description="Convert reddit.com <-> old.reddit.com. Accepts direct URL or message link."
+        description="Convert reddit.com → old.reddit.com or old.reddit.com → reddit.com. Accepts direct URL or message link."
     )
     @app_commands.describe(
         url="A reddit.com URL to convert",
         message_link="A Discord message link containing a reddit URL"
     )
     async def fixreddit(self, interaction: discord.Interaction, url: str = None, message_link: str = None):
-        # Defer because we might fetch a message
         await interaction.response.defer()
 
-        # Case 1: message link
+        # CASE 1: Message link
         if message_link:
             match = MESSAGE_LINK_REGEX.match(message_link)
             if not match:
@@ -42,35 +48,29 @@ class FixReddit(commands.Cog):
                 await interaction.followup.send("❌ Message not found.")
                 return
 
-            # Extract first reddit link
-            extracted = None
-            for word in message.content.split():
-                if REDDIT_REGEX.search(word):
-                    extracted = word
-                    break
-            if not extracted:
-                await interaction.followup.send("❌ No reddit link found in message.")
+            url_match = REDDIT_REGEX.search(message.content)
+            if not url_match:
+                await interaction.followup.send("❌ No reddit URL found in the message.")
                 return
 
-            url = extracted
+            url = url_match.group(0)
 
-        # Case 2: direct URL
+        # CASE 2: Direct URL
         if not url:
             await interaction.followup.send("❌ You must provide a URL or message link.")
             return
 
-        match = REDDIT_REGEX.search(url)
-        if not match:
-            await interaction.followup.send("❌ That is not a valid reddit URL.")
+        url_match = REDDIT_REGEX.search(url)
+        if not url_match:
+            await interaction.followup.send("❌ That does not look like a valid reddit URL.")
             return
 
-        protocol = match.group(1)
-        subdomain = match.group(2) or ""
-        rest = match.group(3) or ""
+        url = url_match.group(0)
 
-        if subdomain.lower() == "old.":
-            new_url = f"{protocol}reddit.com{rest}"
+        # Flip old <-> normal
+        if "old.reddit.com" in url.lower():
+            new_url = url.lower().replace("old.reddit.com", "reddit.com")
         else:
-            new_url = f"{protocol}old.reddit.com{rest}"
+            new_url = url.lower().replace("www.reddit.com", "old.reddit.com").replace("reddit.com", "old.reddit.com")
 
         await interaction.followup.send(f"🔗 **Converted:**\n{new_url}")
