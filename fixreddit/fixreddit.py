@@ -60,5 +60,5 @@ class FixReddit(commands.Cog):
             converted_urls.append(new_url)
 
         # Send results
-        response = "🔗 **Converted URLs:**\n" + "\n".join(converted_urls)
+        response = "🔗 **Converted URLs:** <" + "".join(converted_urls) + ">"
         await ctx.send(response)
