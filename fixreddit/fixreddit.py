@@ -15,15 +15,15 @@ MESSAGE_LINK_REGEX = re.compile(
 
 
 class FixReddit(commands.Cog):
-    """Flips reddit.com ↔ old.reddit.com URLs from Discord messages."""
+    """Flips www.reddit.com ↔ old.reddit.com URLs from Discord messages."""
 
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="fixreddit", description="Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.")
+    @app_commands.command(name="fixreddit", description="Flip www.reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.")
     async def fixreddit(self, interaction: discord.Interaction, message_link: str):
         """
-        Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
+        Flip www.reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
         Usage:
         /fixreddit <Discord message link>
         """
@@ -50,7 +50,7 @@ class FixReddit(commands.Cog):
             await interaction.response.send_message("❌ No Reddit URLs found in that message.")
             return
 
-        # Flip URLs correctly
+        # Flip www.reddit.com ↔ old.reddit.com
         converted_urls = []
         for url in urls:
             url_lower = url.lower()
@@ -58,7 +58,7 @@ class FixReddit(commands.Cog):
                 new_url = url_lower.replace("old.reddit.com", "www.reddit.com")
             else:
                 new_url = re.sub(r"(www\.)?reddit\.com", "old.reddit.com", url_lower)
-            converted_urls.append(new_url)
+            converted_urls.append(f"<{new_url}>")
 
         # Send results
         response = "🔗 **Converted URLs:** " + "\n".join(converted_urls)
