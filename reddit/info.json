@@ -1,0 +1,8 @@
+{
+  "author": [
+    "brian"
+  ],
+  "description": "Flips www.reddit.com ↔ old.reddit.com URLs from Discord messages",
+  "short": "Flips www.reddit.com ↔ old.reddit.com URLs from Discord messages",
+  "install_msg": "reddit cog installed\nrun `[p]load reddit`\nrun `[p]slash enable fixreddit`\nrun `[p]slash sync`\nreload discord"
+}
