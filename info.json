@@ -4,5 +4,5 @@
   ],
   "description": "Link cogs",
   "short": "Link cogs",
-  "install_msg": "discord-red-cogs repo installed\navailable cogs: `fixreddit`"
+  "install_msg": "discord-red-cogs repo installed\navailable cogs: `reddit`"
 }
