@@ -14,17 +14,18 @@ MESSAGE_LINK_REGEX = re.compile(
 
 
 class FixReddit(commands.Cog):
-    """Flips reddit.com <-> old.reddit.com URLs from Discord messages."""
+    """Flips www.reddit.com <-> old.reddit.com URLs from Discord messages."""
 
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
+    # @commands.command()
+    @commands.slash_command(name="fixreddit", description="Flip www.reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.")
     async def fixreddit(self, ctx, *, message_link: str):
         """
-        Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
+        Flip www.reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
         Usage:
-        [p]fixreddit <Discord message link>
+        /fixreddit <Discord message link>
         """
         message_link = message_link.strip()
         match = MESSAGE_LINK_REGEX.match(message_link)
