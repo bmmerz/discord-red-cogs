@@ -14,7 +14,7 @@ MESSAGE_LINK_REGEX = re.compile(
 )
 
 
-class FixReddit(commands.Cog):
+class Reddit(commands.Cog):
     """Flips www.reddit.com ↔ old.reddit.com URLs from Discord messages."""
 
     def __init__(self, bot):
@@ -25,7 +25,7 @@ class FixReddit(commands.Cog):
         """
         Flip www.reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
         Usage:
-        /fixreddit <Discord message link>
+        /reddit <Discord message link>
         """
         message_link = message_link.strip()
         match = MESSAGE_LINK_REGEX.match(message_link)

@@ -4,5 +4,5 @@
   ],
   "description": "Adds and removes `old.` from reddit links",
   "short": "Adds and removes `old.` from reddit links",
-  "install_msg": "reddit cog installed"
+  "install_msg": "reddit cog installed\nrun `[p]slash enable fixreddit`\nrun `[p]slash sync`\nreload discord"
 }
