@@ -1,4 +1,5 @@
 import re
+import discord
 from redbot.core import commands, app_commands
 
 # Regex for Reddit URLs
@@ -14,40 +15,39 @@ MESSAGE_LINK_REGEX = re.compile(
 
 
 class FixReddit(commands.Cog):
-    """Flips reddit.com <-> old.reddit.com URLs from Discord messages."""
+    """Flips reddit.com ↔ old.reddit.com URLs from Discord messages."""
 
     def __init__(self, bot):
         self.bot = bot
 
-    # @commands.command()
     @app_commands.command(name="fixreddit", description="Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.")
-    async def fixreddit(self, ctx, *, message_link: str):
+    async def fixreddit(self, interaction: discord.Interaction, message_link: str):
         """
         Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
         Usage:
-        [p]fixreddit <Discord message link>
+        /fixreddit <Discord message link>
         """
         message_link = message_link.strip()
         match = MESSAGE_LINK_REGEX.match(message_link)
         if not match:
-            await ctx.send("❌ Invalid Discord message link.")
+            await interaction.response.send_message("❌ Invalid Discord message link.")
             return
 
         channel_id, message_id = match.groups()
-        if int(channel_id) != ctx.channel.id:
-            await ctx.send("❌ Message link must be from this channel.")
+        if int(channel_id) != interaction.channel.id:
+            await interaction.response.send_message("❌ Message link must be from this channel.")
             return
 
         try:
-            message = await ctx.channel.fetch_message(int(message_id))
+            message = await interaction.channel.fetch_message(int(message_id))
         except Exception:
-            await ctx.send("❌ Could not fetch the message.")
+            await interaction.response.send_message("❌ Could not fetch the message.")
             return
 
         # Find all Reddit URLs
         urls = [m.group(0) for m in REDDIT_REGEX.finditer(message.content)]
         if not urls:
-            await ctx.send("❌ No Reddit URLs found in that message.")
+            await interaction.response.send_message("❌ No Reddit URLs found in that message.")
             return
 
         # Flip URLs correctly
@@ -61,5 +61,5 @@ class FixReddit(commands.Cog):
             converted_urls.append(new_url)
 
         # Send results
-        response = "🔗 **Converted URLs:** <" + "".join(converted_urls) + ">"
-        await ctx.send(response)
+        response = "🔗 **Converted URLs:** " + "\n".join(converted_urls)
+        await interaction.response.send_message(response)
