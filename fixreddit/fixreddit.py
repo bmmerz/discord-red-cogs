@@ -1,5 +1,5 @@
 import re
-from redbot.core import commands
+from redbot.core import commands, app_commands
 
 # Regex for Reddit URLs
 REDDIT_REGEX = re.compile(
@@ -20,7 +20,7 @@ class FixReddit(commands.Cog):
         self.bot = bot
 
     # @commands.command()
-    @commands.slash_command(name="fixreddit", description="Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.")
+    @app_commands.command(name="fixreddit", description="Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.")
     async def fixreddit(self, ctx, *, message_link: str):
         """
         Flip reddit.com ↔ old.reddit.com for all Reddit links in a Discord message.
