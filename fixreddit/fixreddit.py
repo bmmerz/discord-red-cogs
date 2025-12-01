@@ -61,5 +61,5 @@ class FixReddit(commands.Cog):
             converted_urls.append(f"<{new_url}>")
 
         # Send results
-        response = "🔗 **Converted URLs:** " + "\n".join(converted_urls)
+        response = "🔗 **Correct reddit URLs:** " + "\n".join(converted_urls)
         await interaction.response.send_message(response)
