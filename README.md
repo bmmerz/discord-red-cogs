@@ -5,7 +5,7 @@ Once the bot is installed, run the following command in Discord:
 `[p]load downloader`  
 `[p]repo add myrepo https://github.com/bmmerz/discord-red-cogs`  
 `[p]cog list myrepo`  
-`[p]cog install $cog`  
+`[p]cog install myrepo $cog`  
 `[p]cog load $cog`
 
 # Cogs
