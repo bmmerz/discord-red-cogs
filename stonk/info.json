@@ -1,0 +1,8 @@
+{
+  "author": [
+    "brian"
+  ],
+  "description": "Gets current value for a ticker symbol from Yahoo Finance",
+  "short": "Gets current value for a ticker symbol from Yahoo Finance",
+  "install_msg": "stonk cog installed\nrun `[p]load stonk`\nrun `[p]slash enable quote`\nrun `[p]slash sync`\nreload discord"
+}

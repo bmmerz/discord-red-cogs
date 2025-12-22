@@ -12,6 +12,7 @@ Once the bot is installed, run the following command in Discord:
 | Name   | Version | Description             |
 |--------|---------|-------------------------|
 | reddit | 1.0.0   | Manipulate reddit links |
+| stonk  | 1.0.0   | Get stock quotes        |
 
 # Credits
 [Red-DiscordBot](https://github.com/Cog-Creators/Red-DiscordBot)
