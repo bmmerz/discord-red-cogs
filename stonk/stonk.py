@@ -1,55 +1,85 @@
-import yfinance
+import asyncio
+import functools
 import datetime
-from redbot.core import commands, app_commands
+import yfinance
 import discord
+from redbot.core import commands, app_commands
+
 
 class Stonk(commands.Cog):
-    """Fetches the current value of a stock from Yahoo Finance using yfinance."""
+    """Fetches the current value of a stock with market status and error handling."""
 
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="quote", description="Fetch the current stock price for a given ticker symbol.")
+    async def fetch_full_data(self, symbol: str):
+        """Fetches both history and ticker info in a non-blocking thread."""
+
+        def get_data():
+            ticker = yfinance.Ticker(symbol)
+            # Fetching 1d history and general info
+            history = ticker.history(period="1d", interval="1m")
+            info = ticker.info
+            return ticker, history, info
+
+        task = functools.partial(get_data)
+        return await self.bot.loop.run_in_executor(None, task)
+
+    @app_commands.command(name="quote", description="Get a detailed stock quote with market status.")
     async def quote(self, interaction: discord.Interaction, symbol: str):
-        """
-        Fetch the latest stock price for a given symbol, along with time and percent change.
-        Usage:
-        /quote <symbol>
-        Example: /quote AAPL
-        """
+        await interaction.response.defer()
+
+        symbol = symbol.upper()
+
         try:
-            # Fetch the stock data using yfinance
-            stock = yfinance.Ticker(symbol)
-            # Get the most recent market data (1 minute intervals for the day)
-            data = stock.history(period="1d", interval="1m")
+            ticker, data, info = await self.fetch_full_data(symbol)
 
+            # Check if history is empty (often happens with invalid tickers)
             if data.empty:
-                await interaction.response.send_message(f"❌ No data available for **{symbol.upper()}**.")
-                return
+                return await interaction.followup.send(
+                    f"⚠️ **{symbol}** returned no data. It may be delisted or the ticker is incorrect."
+                )
 
-            # Get the latest closing price and timestamp
+            # Extract Market Status from info
+            # Possible states: 'PRE', 'REGULAR', 'POST', 'CLOSED'
+            market_state = info.get("marketState", "UNKNOWN").replace("_", " ")
+            currency = info.get("currency", "USD")
+
+            # Price Data
+            open_price = data['Open'].iloc[0]
             latest_price = data['Close'].iloc[-1]
-            latest_time = data.index[-1].strftime("%Y-%m-%d %H:%M:%S")  # Convert the timestamp to a readable format
+            change = latest_price - open_price
+            percent_change = (change / open_price) * 100
 
-            # Get the previous closing price (the price at the beginning of the day)
-            previous_price = data['Close'].iloc[0]
+            # Formatting
+            color = 0x2ecc71 if change >= 0 else 0xe74c3c
+            trend = "▲" if change >= 0 else "▼"
 
-            # Calculate the percent change
-            percent_change = ((latest_price - previous_price) / previous_price) * 100
+            embed = discord.Embed(
+                title=f"{symbol} - {info.get('longName', 'Stock Quote')}",
+                color=color,
+                timestamp=datetime.datetime.now(datetime.timezone.utc)
+            )
 
-            # Define the color formatting
-            if percent_change > 0:
-                percent_change_str = f"🟢 **+{percent_change:.2f}%**"  # Green for positive change
-            else:
-                percent_change_str = f"🔴 **{percent_change:.2f}%**"  # Red for negative change
+            embed.add_field(name="Market Open", value=f"{open_price:,.2f} {currency}", inline=False)
+            embed.add_field(name="Current Price", value=f"**{latest_price:,.2f} {currency}**", inline=True)
+            embed.add_field(name="Day Change", value=f"**{trend} {percent_change:+.2f}%**\n({change:+.2f})",
+                            inline=True)
 
-            # Format the response with time, latest price, and percent change
-            response = (f"The latest price for **{symbol.upper()}** is: **${latest_price:.2f}**\n"
-                        f"Last updated at: {latest_time}\n"
-                        f"Change from opening: {percent_change_str}")
+            # Footer displays the Market Status
+            footer_text = f"Status: {market_state.title()} | Data: Yahoo Finance"
+            embed.set_footer(text=footer_text)
 
-            await interaction.response.send_message(response)
+            await interaction.followup.send(embed=embed)
 
         except Exception as e:
-            # In case of any errors, send an error message
-            await interaction.response.send_message(f"❌ Error fetching data for symbol **{symbol.upper()}**: {str(e)}")
+            # Handle Specific Error Cases
+            err_msg = str(e).lower()
+            if "429" in err_msg:
+                msg = "🛑 Rate limited! Yahoo Finance is blocking requests. Please try again in a few minutes."
+            elif "not found" in err_msg or "none" in err_msg:
+                msg = f"❌ Ticker **{symbol}** could not be found."
+            else:
+                msg = f"⚙️ An unexpected error occurred: `{str(e)}`"
+
+            await interaction.followup.send(msg)
