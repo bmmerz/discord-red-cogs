@@ -9,10 +9,11 @@ Once the bot is installed, run the following command in Discord:
 `[p]load $cog`
 
 # Cogs
-| Name   | Version | Description             |
-|--------|---------|-------------------------|
-| reddit | 1.0.0   | Manipulate reddit links |
-| stonk  | 1.0.1   | Get stock quotes        |
+| Name   | Version | Description                     |
+|--------|---------|---------------------------------|
+| jfc    | 1.0.0   | Get quote from biblegateway.com |
+| reddit | 1.0.0   | Manipulate reddit links         |
+| stonk  | 1.0.1   | Get stock quotes                |
 
 # Credits
 [Red-DiscordBot](https://github.com/Cog-Creators/Red-DiscordBot)

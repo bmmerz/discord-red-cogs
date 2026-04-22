@@ -1,0 +1,9 @@
+{
+  "author": [
+    "brian"
+  ],
+  "description": "Gets a quote from biblegateway.com",
+  "short": "Gets a quote from biblegateway.com",
+  "requirements": ["aiohttp","beautifulsoup4"],
+  "install_msg": "jfc cog installed\nrun `[p]load jfc`\nrun `[p]slash enable jfc`\nrun `[p]slash sync`\nreload discord"
+}
